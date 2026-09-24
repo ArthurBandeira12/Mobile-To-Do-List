@@ -361,3 +361,36 @@ Interface de eliminação implementada de forma nativa e sem impacto no tamanho 
 
 ## Current Status
 Completed
+
+
+
+## Prompt / Request
+Implementação da edição de texto da tarefa (Update completo).
+
+## Decision Summary
+- **Base de Dados:** Adicionadas queries `selectTaskById` e `updateTaskText`.
+- **Arquitetura:** `TaskDetailScreenModel` adaptado para distinguir entre um "Insert" (`taskId == null`) e um "Update" (`taskId != null`).
+- **UI (Lista):** Modificador `.clickable` adicionado ao `Card` para injetar o ID da tarefa na rota do Voyager.
+- **UI (Detalhe):** Utilizado `LaunchedEffect` para garantir a execução única da query de leitura ao inicializar o ecrã, preenchendo as variáveis de estado (`title` e `description`) com os dados existentes.
+
+## Result
+Fluxo completo de edição (Update) estabelecido. As tarefas agora podem ser modificadas diretamente.
+
+## Current Status
+Completed
+
+
+## Prompt / Request
+Erro de compilação `Unresolved reference 'TaskListScreen'` no `App.kt` e erros em cascata no `Screens.kt` após substituição do ficheiro.
+
+## Problems / Errors
+A omissão da declaração `package` no topo do ficheiro `Screens.kt` após a refatoração moveu as classes para o *default package*. Como o `App.kt` e os Repositórios estão sob o pacote `project.to.doapp.arthur`, as referências entre os ficheiros foram quebradas.
+
+## Fixes Attempted
+- Adicionada a declaração `package project.to.doapp.arthur` na primeira linha do `Screens.kt`.
+
+## Result
+Visibilidade das classes restaurada no mesmo *namespace* e compilação concluída com sucesso.
+
+## Current Status
+Completed
