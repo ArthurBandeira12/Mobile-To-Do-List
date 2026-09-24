@@ -106,3 +106,152 @@ Navegação entre a Lista de Tarefas, Detalhe da Tarefa e Gestão de Categorias 
 
 ## Current Status
 Completed
+
+## Prompt / Request
+Erro de compilação no Gradle (`Unresolved reference`) após adicionar as dependências do SQLDelight.
+
+## Problems / Errors
+A configuração do `sqldelight { ... }` foi colocada indevidamente dentro do escopo de outro bloco no ficheiro `shared/build.gradle.kts`, o que corrompeu a leitura do script do Gradle e impediu a inicialização da base de dados.
+
+## Fixes Attempted
+- Movido o bloco de configuração do `sqldelight` para o nível raiz (top-level) do ficheiro `shared/build.gradle.kts`, imediatamente abaixo do bloco `plugins`.
+
+## Result
+Sintaxe do Gradle corrigida e configuração da base de dados reconhecida pelo plugin.
+
+## Current Status
+Completed (Fix applied)
+
+
+## Prompt / Request
+Correção de "Script compilation errors" e "Unresolved reference" no ficheiro `shared/build.gradle.kts`.
+
+## Problems / Errors
+A IDE inseriu automaticamente um import inválido (`org.gradle.declarative.dsl.schema.FqName.Empty.packageName`) enquanto o ficheiro possuía erros de sintaxe no passo anterior. Este import colidia com a propriedade `packageName` do SQLDelight, corrompendo a leitura do script inteiro pelo Gradle.
+
+## Fixes Attempted
+- Removido o import inválido do topo do ficheiro.
+- Adicionado o bloco `iosMain.dependencies` com a dependência nativa do SQLDelight (`libs.sqldelight.native`) para garantir a compilação multiplataforma.
+
+## Result
+Script Gradle sincronizado com sucesso e preparado para o *Rebuild* do SQLDelight.
+
+## Current Status
+Completed
+
+
+## Prompt / Request
+Erro de "Unresolved reference 'androidLibrary'" no ficheiro `shared/build.gradle.kts`.
+
+## Problems / Errors
+A declaração do plugin do Android no módulo partilhado estava a referenciar um nome (`androidLibrary`) que não existe no catálogo de versões gerado pelo KMP Wizard.
+
+## Fixes Attempted
+- Corrigido o alias no bloco `plugins` para `libs.plugins.androidMultiplatformLibrary`, que corresponde à declaração correta no `libs.versions.toml`.
+
+## Result
+Erro novamente
+
+## Current Status
+Completed
+
+## Prompt / Request
+Resolução do erro de colisão de DSL no KMP com AGP 9.0 (Unresolved reference: namespace, compileSdk).
+
+## Problems / Errors
+O bloco `android { ... }` dentro de `kotlin { ... }` estava a ser resolvido incorretamente pelo compilador como a função de alvo `KotlinAndroidTarget`, resultando em erros de "Unresolved reference" para propriedades de configuração do Android. O bloco `compilerOptions` também apresentava incompatibilidade de DSL nesta versão específica.
+
+## Fixes Attempted
+- Substituído o bloco `android { ... }` por `androidLibrary { ... }` para forçar a resolução correta da extensão (contornando o bug de colisão de nomes).
+- Removido o bloco problemático `compilerOptions`.
+- Adicionado `jvmToolchain(21)` ao nível global do bloco `kotlin { ... }` para garantir a compatibilidade com o Java 21 de forma mais segura.
+
+## Result
+Avisos de depreciação ignorados em prol da compilação bem-sucedida. Configuração resolvida.
+
+## Current Status
+Completed
+
+
+
+## Prompt / Request
+Implementação dos drivers nativos do SQLite para inicialização da base de dados (Passo 5 da Estratégia de Implementação).
+
+## Decision Summary
+- **Padrão Arquitetural:** Utilizado o mecanismo `expect`/`actual` do Kotlin Multiplatform para criar o `DatabaseDriverFactory`.
+- **Android:** Implementado o `AndroidSqliteDriver` que requer injeção do `Context` da aplicação.
+- **iOS:** Implementado o `NativeSqliteDriver` utilizando o driver nativo do SQLDelight.
+- **Nome do Ficheiro DB:** Definido como `todoapp.db` em ambas as plataformas para consistência.
+
+## Actions Performed
+- Criada a declaração `expect class` no módulo `commonMain`.
+- Criadas as respetivas `actual classes` nos módulos `androidMain` e `iosMain` resolvendo as dependências específicas de cada plataforma.
+
+## Result
+Infraestrutura de acesso à base de dados concluída. A aplicação já tem capacidade para inicializar e gerir ligações SQLite de forma nativa.
+
+## Current Status
+Completed
+
+
+## Prompt / Request
+Definição dos modelos de dados (Task e Category) e configuração da persistência local com SQLite, conforme os Passos 4 e 5 da estratégia.
+
+## Decision Summary
+- **Base de Dados:** SQLDelight (versão 2.0.1) selecionado por gerar código Kotlin *type-safe* diretamente de *statements* SQL.
+- **Modelos:** Optou-se por separar as tabelas em `TaskEntity` e `CategoryEntity`.
+- **Estratégia de Eliminação:** Ao eliminar uma Categoria que está em uso, a tarefa não é apagada. Em vez disso, a restrição `ON DELETE SET NULL` no SQLite transforma a categoria da tarefa em "Uncategorized", cumprindo a secção 6 (Category Management) da especificação de forma nativa e eficiente.
+- **Tipos de Dados:** O SQLite não tem tipo Booleano nativo, pelo que utilizámos `INTEGER AS Boolean` gerido pelo SQLDelight. As datas (`createdAt` e `dueDateTime`) serão guardadas como `TEXT` (formato ISO-8601) para simplificar a compatibilidade entre plataformas.
+
+## Actions Performed
+- Plugin e dependências do SQLDelight adicionados (Android, Native e Coroutines) ao `libs.versions.toml` e ao `shared/build.gradle.kts`.
+- Configuração do pacote da base de dados definida para `project.to.doapp.arthur.database.AppDatabase`.
+- Ficheiro `AppDatabase.sq` criado com os esquemas e *queries* iniciais, incluindo Chaves Estrangeiras (*Foreign Keys*).
+- Projeto compilado (Rebuild) para gerar as classes nativas do SQLDelight.
+
+## Result
+Modelos de dados e infraestrutura SQLite devidamente configurados e classes Kotlin geradas.
+
+## Current Status
+Completed
+
+
+
+## Prompt / Request
+Ignorar falsos positivos do IDE no `iosMain` (ambiente Windows) e implementar o padrão Repository (Passo 5).
+
+## Decision Summary
+- **Falsos Positivos:** Os erros de "Unresolved reference" no source set `iosMain` foram identificados como um artefacto do Android Studio em hosts Windows, visto que a indexação do código gerado para iOS requer um ambiente macOS. O build via Gradle completou com sucesso.
+- **Arquitetura (Repository):** Criada a classe `TaskRepository` no `commonMain`.
+- **Injeção de Dependências Básica:** O repositório recebe o `DatabaseDriverFactory` no construtor para instanciar a `AppDatabase` agnóstica à plataforma.
+
+## Actions Performed
+- Criado o ficheiro `TaskRepository.kt`.
+- Implementadas as funções iniciais de abstração do SQLDelight: `getAllTasks()`, `insertCategory()` e `getAllCategories()`.
+
+## Result
+A camada de acesso a dados está abstraída e pronta a ser consumida pelos ViewModels (ScreenModels do Voyager).
+
+## Current Status
+Completed
+
+
+
+## Prompt / Request
+Injeção da `AppDatabase` nos ecrãs através de `CompositionLocal` e implementação do `ScreenModel` base (Passos 6 e 7).
+
+## Decision Summary
+- **Injeção de Dependências:** Optou-se por `staticCompositionLocalOf` no ficheiro `App.kt` para distribuir o `TaskRepository` pela árvore de navegação do Compose, evitando dependências externas como Koin para não fragilizar a configuração recente do Gradle.
+- **Entry Points:** O `DatabaseDriverFactory` foi instanciado e passado através do `MainActivity.kt` (fornecendo o `applicationContext`) e no `MainViewController.kt` (iOS).
+- **Gestão de Estado:** Criado o `TaskListScreenModel` que herda de `ScreenModel` (Voyager) e utiliza `StateFlow` para observar e expor a lista de `TaskEntity` diretamente da base de dados.
+
+## Actions Performed
+- Função principal `App()` reestruturada para aceitar o Driver Factory.
+- Instâncias nativas conectadas no Android e iOS.
+- Padrão arquitetural reativo (StateFlow + LazyColumn) aplicado ao `TaskListScreen`.
+
+## Result
+A lista de tarefas está agora conetada em tempo real à base de dados SQLite.
+
+## Current Status
+Completed

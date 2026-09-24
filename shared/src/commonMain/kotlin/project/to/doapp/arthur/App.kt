@@ -15,20 +15,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.resources.painterResource
-
+import androidx.compose.runtime.CompositionLocalProvider
 import todoapp.shared.generated.resources.Res
 import todoapp.shared.generated.resources.compose_multiplatform
 import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.SlideTransition
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
+
+// Criamos um ponto de acesso global para o nosso Repositório na UI
+val LocalTaskRepository = staticCompositionLocalOf<TaskRepository> {
+    error("TaskRepository não foi providenciado!")
+}
 
 @Composable
-@Preview
-fun App() {
-    MaterialTheme {
-        Navigator(TaskListScreen()) { navigator ->
-            // SlideTransition adiciona uma animação nativa ao mudar de ecrã
-            SlideTransition(navigator);
+fun App(databaseDriverFactory: DatabaseDriverFactory) {
+    // Instancia o repositório apenas uma vez
+    val repository = remember { TaskRepository(databaseDriverFactory) }
+
+    // Torna o repositório disponível para todos os ecrãs de forma invisível
+    CompositionLocalProvider(LocalTaskRepository provides repository) {
+        MaterialTheme {
+            Navigator(TaskListScreen()) { navigator ->
+                SlideTransition(navigator)
+            }
         }
     }
 }
