@@ -1,3 +1,5 @@
+import kotlin.Boolean;
+
 CREATE TABLE CategoryEntity (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL
@@ -14,7 +16,6 @@ CREATE TABLE TaskEntity (
     FOREIGN KEY (categoryId) REFERENCES CategoryEntity(id) ON DELETE SET NULL
 );
 
--- Queries básicas
 selectAllTasks:
 SELECT * FROM TaskEntity;
 
@@ -22,4 +23,6 @@ insertCategory:
 INSERT INTO CategoryEntity(name) VALUES (?);
 
 selectAllCategories:
-SELECT * FROM CategoryEntity;
+SELECT * FROM CategoryEntity;    insertTask:
+INSERT INTO TaskEntity(title, description, createdAt)
+VALUES (?, ?, ?);

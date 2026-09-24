@@ -16,6 +16,16 @@ class TaskRepository(databaseDriverFactory: DatabaseDriverFactory) {
         return queries.selectAllTasks().executeAsList()
     }
 
+    fun insertTask(title: String, description: String?) {
+        // Para simplificar nesta fase, vamos usar "Hoje" como data de criação.
+        // Numa fase futura, podemos adicionar uma biblioteca para gerir datas reais.
+        queries.insertTask(
+            title = title,
+            description = description,
+            createdAt = "Hoje"
+        )
+    }
+
     // --- Operações de Categorias ---
 
     fun insertCategory(name: String) {

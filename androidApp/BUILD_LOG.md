@@ -255,3 +255,75 @@ A lista de tarefas está agora conetada em tempo real à base de dados SQLite.
 
 ## Current Status
 Completed
+
+
+## Prompt / Request
+Correção do erro de compilação `Unresolved reference 'Boolean'` nas classes geradas pelo SQLDelight.
+
+## Problems / Errors
+Apesar do ficheiro `AppDatabase.sq` ter sido localizado e o código gerado com sucesso, o compilador do Kotlin não conseguiu resolver o tipo `Boolean` mapeado na instrução `INTEGER AS Boolean` da `TaskEntity`. O SQLDelight requer importações explícitas para tipos que não são primitivos diretos do SQLite.
+
+## Fixes Attempted
+- Adicionada a instrução `import kotlin.Boolean;` na primeira linha do ficheiro `AppDatabase.sq` para orientar o gerador de código.
+- Executado o *Rebuild Project* para atualizar as classes geradas.
+
+## Result
+Tipo `Boolean` resolvido com sucesso nas *queries* geradas e erros em cascata eliminados.
+
+## Current Status
+Completed
+
+
+## Prompt / Request
+Resolução de erros de delegação de propriedades (`getValue`), tipagem (`receiver of type 'Int'`) e referências não resolvidas no `Screens.kt`.
+
+## Problems / Errors
+A ausência de importações específicas provocou falhas na compilação do UI:
+1. A falta de `androidx.compose.runtime.getValue` impediu a delegação `by` do `collectAsState()`.
+2. A falta de `androidx.compose.foundation.lazy.items` fez com que o compilador utilizasse a sobrecarga `items(count: Int)` do `LazyColumn`, inferindo incorretamente que o objeto da iteração era um `Int` em vez de um `TaskEntity`.
+3. A falta de `cafe.adriel.voyager.core.model.rememberScreenModel` causou "Unresolved reference".
+
+## Fixes Attempted
+- Adicionadas manualmente as três declarações de importação em falta no topo do ficheiro `Screens.kt`.
+
+## Result
+Tipos inferidos corretamente e erros de compilação da interface resolvidos.
+
+## Current Status
+Completed
+
+
+## Prompt / Request
+Implementação da funcionalidade de inserção de dados (Create) no `TaskDetailScreen`.
+
+## Decision Summary
+- **Fluxo de Dados:** Adicionada a instrução `insertTask` no SQLDelight (`AppDatabase.sq`) e no `TaskRepository`.
+- **Gestão de Estado na UI:** Utilizado `mutableStateOf` para vincular o input do utilizador aos `OutlinedTextField` do Compose de forma reativa.
+- **Assincronismo:** A inserção na base de dados é gerida por uma corrotina no `TaskDetailScreenModel` (`screenModelScope.launch`), invocando uma *callback* (`onSaveComplete`) para acionar o `navigator.pop()` apenas quando a persistência for garantida.
+
+## Actions Performed
+- Rebuild ao projeto para gerar o novo método de inserção no SQLDelight.
+- Criação do ficheiro `TaskDetailScreenModel.kt`.
+- Reestruturação do `TaskDetailScreen` para incluir formulário de input (`Scaffold`, `TopAppBar`, `OutlinedTextField`, `FloatingActionButton`).
+
+## Result
+A aplicação é agora capaz de persistir novas tarefas na base de dados SQLite nativa de forma assíncrona, atualizando o ecrã principal de imediato devido à reatividade do `StateFlow`.
+
+## Current Status
+Completed
+
+
+## Prompt / Request
+Resolução de erros em cascata (`remember`, `mutableStateOf`, `it` não resolvido e contexto `@Composable`) no formulário do `TaskDetailScreen`.
+
+## Problems / Errors
+A utilização de `var ... by remember { mutableStateOf("") }` requer a importação explícita do delegado `setValue` do Compose. A sua ausência quebrou a inferência de tipos em todo o ecrã, fazendo com que os componentes visuais (como o `OutlinedTextField`) não reconhecessem os seus parâmetros lambda (`it`), gerando erros secundários.
+
+## Fixes Attempted
+- Adicionadas importações explícitas de `androidx.compose.runtime.remember`, `androidx.compose.runtime.mutableStateOf` e `androidx.compose.runtime.setValue` no `Screens.kt`.
+
+## Result
+Delegação de propriedades restaurada, inferência de tipos corrigida e formulário de criação de tarefas apto a compilar.
+
+## Current Status
+Completed

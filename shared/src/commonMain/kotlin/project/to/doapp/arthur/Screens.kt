@@ -1,5 +1,7 @@
 package project.to.doapp.arthur
-
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.lazy.items
+import cafe.adriel.voyager.core.model.rememberScreenModel
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.*
@@ -15,6 +17,9 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 // Ecrã 1 - Lista de Tarefas
 class TaskListScreen : Screen {
     @Composable
@@ -63,21 +68,61 @@ class TaskListScreen : Screen {
 
 // Ecrã 2 - Detalhe/Edição da Tarefa
 // Recebe o ID opcional. Se for nulo, é criação. Se tiver ID, é edição.
-data class TaskDetailScreen(val taskId: Long?) : Screen {
+class TaskDetailScreen(val taskId: Long? = null) : Screen {
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val repository = LocalTaskRepository.current
+        val screenModel = rememberScreenModel { TaskDetailScreenModel(repository) }
 
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(if (taskId == null) "Ecrã 2: Nova Tarefa" else "Ecrã 2: Editar Tarefa $taskId")
-            Spacer(modifier = Modifier.height(16.dp))
+        // Variáveis de estado para guardar o que o utilizador escreve
+        var title by remember { mutableStateOf("") }
+        var description by remember { mutableStateOf("") }
 
-            Button(onClick = { navigator.pop() }) {
-                Text("Voltar à Lista")
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(if (taskId == null) "Nova Tarefa" else "Editar Tarefa") },
+                    navigationIcon = {
+                        Button(onClick = { navigator.pop() }) {
+                            Text("Voltar")
+                        }
+                    }
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(onClick = {
+                    if (title.isNotBlank()) {
+                        screenModel.saveTask(title, description) {
+                            navigator.pop() // Volta automaticamente para a lista após salvar
+                        }
+                    }
+                }) {
+                    Text("Guardar")
+                }
+            }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp)
+            ) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Título da Tarefa") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = { Text("Descrição (Opcional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 3
+                )
             }
         }
     }
