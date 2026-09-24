@@ -327,3 +327,37 @@ Delegação de propriedades restaurada, inferência de tipos corrigida e formul�
 
 ## Current Status
 Completed
+
+
+## Prompt / Request
+Resolução de latência extrema na atualização da interface após inserir, atualizar ou apagar tarefas.
+
+## Problems / Errors
+A navegação com o Voyager retém as instâncias de `ScreenModel`. Ao retornar do `TaskDetailScreen`, o bloco `init` do `TaskListScreenModel` não era executado novamente, e o estado não era atualizado. A chamada bloqueante `executeAsList()` também causava congelamento da *Main Thread*.
+
+## Fixes Attempted
+- Substituição da leitura estática `executeAsList()` pela extensão reativa `asFlow().mapToList(Dispatchers.Default)` do SQLDelight.
+- Refatoração do `TaskListScreenModel` para implementar um coletor contínuo (`collect`) no `init`, eliminando a necessidade de invocar métodos manuais de *reload* após mutações de dados.
+
+## Result
+Integração reativa *end-to-end* concluída. A UI atualiza instantaneamente a qualquer modificação no SQLite (Create/Update/Delete) através do sincronismo garantido pelo `Flow` do Kotlin. Latência eliminada.
+
+## Current Status
+Completed
+
+## Prompt / Request
+Erro de compilação `Unresolved reference 'icons'` e dependência ausente para o pacote `androidx.compose.material.icons`.
+
+## Problems / Errors
+O template do KMP não inclui a biblioteca `material-icons-extended` por padrão. A tentativa de importar e utilizar `Icons.Default.Delete` bloqueou a compilação.
+
+## Fixes Attempted
+- Removidos os imports do `material.icons`.
+- Substituída a implementação do `Icon` por um componente `Text` contendo o emoji 🗑️, mitigando a necessidade de alterar as dependências do Gradle e arriscar novos conflitos de sincronização.
+- Executado Rebuild para resolver dependências pendentes do SQLDelight no `TaskListScreenModel.kt`.
+
+## Result
+Interface de eliminação implementada de forma nativa e sem impacto no tamanho final da aplicação ou nos ficheiros de configuração.
+
+## Current Status
+Completed

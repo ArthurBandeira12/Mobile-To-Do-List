@@ -13,13 +13,27 @@ class TaskListScreenModel(private val repository: TaskRepository) : ScreenModel 
     val tasks: StateFlow<List<TaskEntity>> = _tasks
 
     init {
-        loadTasks()
+        // A corrotina fica a escutar a base de dados permanentemente
+        screenModelScope.launch {
+            repository.getAllTasks().collect { novaLista ->
+                _tasks.value = novaLista
+            }
+        }
     }
 
-    fun loadTasks() {
+    fun toggleTaskCompletion(task: TaskEntity) {
         screenModelScope.launch {
-            // Vai à base de dados buscar as tarefas e atualiza a UI
-            _tasks.value = repository.getAllTasks()
+            repository.updateTaskCompletion(task.id, !task.completed)
+
+            // Não precisamos mais do loadTasks() aqui!
+        }
+    }
+
+    fun deleteTask(taskId: Long) {
+        screenModelScope.launch {
+            repository.deleteTask(taskId)
+
+            // Nem precisamos do loadTasks() aqui!
         }
     }
 }

@@ -25,4 +25,12 @@ INSERT INTO CategoryEntity(name) VALUES (?);
 selectAllCategories:
 SELECT * FROM CategoryEntity;    insertTask:
 INSERT INTO TaskEntity(title, description, createdAt)
-VALUES (?, ?, ?);
+VALUES (?, ?, ?);updateTaskCompletion:
+UPDATE TaskEntity SET completed = ? WHERE id = ?;
+
+deleteTask:
+DELETE FROM TaskEntity WHERE id = ?;selectTaskById:
+SELECT * FROM TaskEntity WHERE id = ?;
+
+updateTaskText:
+UPDATE TaskEntity SET title = ?, description = ? WHERE id = ?;

@@ -1,35 +1,27 @@
 package project.to.doapp.arthur
-import androidx.compose.runtime.getValue
-import androidx.compose.foundation.lazy.items
-import cafe.adriel.voyager.core.model.rememberScreenModel
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-// Ecrã 1 - Lista de Tarefas
+
+// --- TELA 1: LISTA DE TAREFAS ---
 class TaskListScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        // Recuperamos o repositório invisível e passamos para o Model
         val repository = LocalTaskRepository.current
         val screenModel = rememberScreenModel { TaskListScreenModel(repository) }
 
-        // Observamos a lista de tarefas reativamente
         val tasks by screenModel.tasks.collectAsState()
 
         Scaffold(
@@ -50,11 +42,29 @@ class TaskListScreen : Screen {
                 } else {
                     LazyColumn {
                         items(tasks) { task ->
-                            Card(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Text(task.title, style = MaterialTheme.typography.titleMedium)
-                                    if (task.description != null) {
-                                        Text(task.description, style = MaterialTheme.typography.bodyMedium)
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    // Aqui tornamos o cartão clicável para abrir a edição
+                                    .clickable { navigator.push(TaskDetailScreen(taskId = task.id)) }
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Checkbox(
+                                        checked = task.completed,
+                                        onCheckedChange = { screenModel.toggleTaskCompletion(task) }
+                                    )
+                                    Column(modifier = Modifier.weight(1f).padding(horizontal = 8.dp)) {
+                                        Text(task.title, style = MaterialTheme.typography.titleMedium)
+                                        if (task.description != null) {
+                                            Text(task.description, style = MaterialTheme.typography.bodyMedium)
+                                        }
+                                    }
+                                    IconButton(onClick = { screenModel.deleteTask(task.id) }) {
+                                        Text("🗑️") // Mantemos o seu emoji!
                                     }
                                 }
                             }
@@ -66,8 +76,7 @@ class TaskListScreen : Screen {
     }
 }
 
-// Ecrã 2 - Detalhe/Edição da Tarefa
-// Recebe o ID opcional. Se for nulo, é criação. Se tiver ID, é edição.
+// --- TELA 2: CRIAR / EDITAR TAREFA ---
 class TaskDetailScreen(val taskId: Long? = null) : Screen {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -76,9 +85,19 @@ class TaskDetailScreen(val taskId: Long? = null) : Screen {
         val repository = LocalTaskRepository.current
         val screenModel = rememberScreenModel { TaskDetailScreenModel(repository) }
 
-        // Variáveis de estado para guardar o que o utilizador escreve
         var title by remember { mutableStateOf("") }
         var description by remember { mutableStateOf("") }
+
+        // Carrega os dados se for uma edição
+        LaunchedEffect(taskId) {
+            if (taskId != null) {
+                val task = screenModel.getTask(taskId)
+                if (task != null) {
+                    title = task.title
+                    description = task.description ?: ""
+                }
+            }
+        }
 
         Scaffold(
             topBar = {
@@ -94,8 +113,8 @@ class TaskDetailScreen(val taskId: Long? = null) : Screen {
             floatingActionButton = {
                 FloatingActionButton(onClick = {
                     if (title.isNotBlank()) {
-                        screenModel.saveTask(title, description) {
-                            navigator.pop() // Volta automaticamente para a lista após salvar
+                        screenModel.saveTask(taskId, title, description) {
+                            navigator.pop()
                         }
                     }
                 }) {
@@ -123,27 +142,6 @@ class TaskDetailScreen(val taskId: Long? = null) : Screen {
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3
                 )
-            }
-        }
-    }
-}
-
-// Ecrã 3 - Gestão de Categorias
-class CategoryManagementScreen : Screen {
-    @Composable
-    override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
-
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text("Ecrã 3: Gestão de Categorias")
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(onClick = { navigator.pop() }) {
-                Text("Voltar à Lista")
             }
         }
     }

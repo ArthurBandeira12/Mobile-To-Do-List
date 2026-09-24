@@ -3,27 +3,34 @@ package project.to.doapp.arthur
 import project.to.doapp.arthur.database.AppDatabase
 import project.to.doapp.arthur.database.CategoryEntity
 import project.to.doapp.arthur.database.TaskEntity
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 
 class TaskRepository(databaseDriverFactory: DatabaseDriverFactory) {
 
-    // Inicializa a base de dados com o driver específico da plataforma
     private val database = AppDatabase(databaseDriverFactory.createDriver())
     private val queries = database.appDatabaseQueries
 
     // --- Operações de Tarefas ---
 
-    fun getAllTasks(): List<TaskEntity> {
-        return queries.selectAllTasks().executeAsList()
+    // Agora retorna um Flow contínuo em vez de uma lista estática
+    fun getAllTasks(): Flow<List<TaskEntity>> {
+        // Dispatchers.Default garante que a leitura da DB não bloqueia a UI
+        return queries.selectAllTasks().asFlow().mapToList(Dispatchers.Default)
     }
 
     fun insertTask(title: String, description: String?) {
-        // Para simplificar nesta fase, vamos usar "Hoje" como data de criação.
-        // Numa fase futura, podemos adicionar uma biblioteca para gerir datas reais.
-        queries.insertTask(
-            title = title,
-            description = description,
-            createdAt = "Hoje"
-        )
+        queries.insertTask(title, description, "Hoje")
+    }
+
+    fun updateTaskCompletion(id: Long, completed: Boolean) {
+        queries.updateTaskCompletion(completed, id)
+    }
+
+    fun deleteTask(id: Long) {
+        queries.deleteTask(id)
     }
 
     // --- Operações de Categorias ---
@@ -34,5 +41,13 @@ class TaskRepository(databaseDriverFactory: DatabaseDriverFactory) {
 
     fun getAllCategories(): List<CategoryEntity> {
         return queries.selectAllCategories().executeAsList()
+    }
+
+    fun getTaskById(id: Long): TaskEntity? {
+        return queries.selectTaskById(id).executeAsOneOrNull()
+    }
+
+    fun updateTaskText(id: Long, title: String, description: String?) {
+        queries.updateTaskText(title, description, id)
     }
 }
