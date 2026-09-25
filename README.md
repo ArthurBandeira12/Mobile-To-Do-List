@@ -1,6 +1,6 @@
 ## 🚀 Como Executar o Projeto
 
-**Pré-requisitos:** Android Studio (versão recente) e JDK 17+. Para testar no iOS, é necessário um Mac com Xcode.
+**Pré-requisitos:** Android Studio (versão recente) e JDK 21. Para testar no iOS, é necessário um Mac com Xcode.
 
 **Passo a Passo:**
 
