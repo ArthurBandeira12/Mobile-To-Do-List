@@ -1,31 +1,23 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+## 🚀 Como Executar o Projeto
 
-* [/iosApp](./iosApp/iosApp) contains an iOS application. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+**Pré-requisitos:** Android Studio (versão recente) e JDK 17+. Para testar no iOS, é necessário um Mac com Xcode.
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+**Passo a Passo:**
 
-### Running the apps
+1. **Clonar e Abrir:**
+  * Faça o clone do repositório: `git clone https://github.com/SEU-USUARIO/todo-app-kmp.git`
+  * Abra a pasta clonada no **Android Studio**.
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+2. **Gerar a Base de Dados (Passo Obrigatório):**
+  * Aguarde a sincronização inicial do Gradle.
+  * No menu superior do Android Studio, clique em **Build > Rebuild Project**.
+    *(Atenção: Este passo é essencial para o SQLDelight gerar as classes do SQLite. Sem isto, a aplicação não compila).*
 
-- Android app: `./gradlew :androidApp:assembleDebug`
-- iOS app: open the [/iosApp](./iosApp) directory in Xcode and run it from there.
+3. **Correr no Android:**
+  * Na barra superior, certifique-se de que a configuração está definida como **`composeApp`** ou **`androidApp`**.
+  * Escolha um emulador ou ligue o seu dispositivo físico.
+  * Clique em **Run** (o botão verde de "Play").
 
-### Running tests
-
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
-
-- Android tests: `./gradlew :shared:testAndroidHostTest`
-- iOS tests: `./gradlew :shared:iosSimulatorArm64Test`
-
----
-
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+4. **Correr no iOS (Opcional):**
+  * Mude a configuração de execução no topo para **`iosApp`**.
+  * Escolha um simulador de iPhone e clique em **Run**.
